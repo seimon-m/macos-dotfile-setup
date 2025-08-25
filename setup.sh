@@ -166,31 +166,27 @@ fi
 ###############################################################################
 
 info "Setting up Fish shell..."
-FISH_REPO_DIR="$DIR/fish"        # repo folder with config.fish, functions/, completions/
-FISH_DEST="$HOME/.config/fish"
+FISH_REPO_DIR="$DIR"        # repo folder with config.fish, functions/, completions/
 
-mkdir -p "$FISH_DEST/functions"
-mkdir -p "$FISH_DEST/completions"
+mkdir -p "$FISH_REPO_DIR/functions"
+mkdir -p "$FISH_REPO_DIR/completions"
 
 # Symlink main config.fish
-ln -sf "$FISH_REPO_DIR/config.fish" "$FISH_DEST/config.fish"
+ln -sf "$FISH_REPO_DIR/config.fish" "$FISH_REPO_DIR/config.fish"
 
 # Symlink functions
 if [ -d "$FISH_REPO_DIR/functions" ]; then
     find "$FISH_REPO_DIR/functions" -type f -name "*.fish" | while read fn; do
-        ln -sf "$fn" "$FISH_DEST/functions/$(basename "$fn")"
+        ln -sf "$fn" "$FISH_REPO_DIR/functions/$(basename "$fn")"
     done
 fi
 
 # Symlink completions
 if [ -d "$FISH_REPO_DIR/completions" ]; then
     find "$FISH_REPO_DIR/completions" -type f -name "*.fish" | while read fn; do
-        ln -sf "$fn" "$FISH_DEST/completions/$(basename "$fn")"
+        ln -sf "$fn" "$FISH_REPO_DIR/completions/$(basename "$fn")"
     done
 fi
-
-# Remove broken symlinks
-find "$FISH_DEST" -type l ! -exec test -e {} \; -delete
 
 # Add Fish to /etc/shells and set as default
 if ! grep -Fxq "$(which fish)" /etc/shells; then
