@@ -6,41 +6,30 @@ set -e
 DIR=$(dirname "$0")
 cd "$DIR"
 
-info() { printf "\n\033[1;34m[INFO]\033[0m %s\n" "$1"; }
+info()    { printf "\n\033[1;34m[INFO]\033[0m %s\n" "$1"; }
 success() { printf "\n\033[1;32m[SUCCESS]\033[0m %s\n" "$1"; }
 
 ###############################################################################
 # Homebrew Installation
 ###############################################################################
-
 info "Installing Homebrew..."
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 info "Adding Homebrew to PATH..."
-
-if [ ! -f ~/.zshrc ]; then
-    touch ~/.zshrc
-fi 
-
 UNAME_MACHINE="$(/usr/bin/uname -m)"
 if [[ "${UNAME_MACHINE}" == "arm64" ]]; then
-    grep -qxF 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.zshrc || \
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
     eval "$(/opt/homebrew/bin/brew shellenv)"
 else
-    grep -qxF 'eval "$(/usr/local/bin/brew shellenv)"' ~/.zshrc || \
-        echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zshrc
     eval "$(/usr/local/bin/brew shellenv)"
 fi
 
 ###############################################################################
 # Brew packages and casks
 ###############################################################################
-
 info "Installing Brew packages from Brewfile..."
 brew update
 brew upgrade
-brew bundle --file=./Brewfile
+brew bundle --file="$DIR/Brewfile"
 brew cleanup
 
 ###############################################################################
@@ -147,62 +136,56 @@ git config --global push.default simple
 ###############################################################################
 # Node with fnm
 ###############################################################################
-
 info "Setting up Node with fnm..."
+if ! command -v fnm >/dev/null 2>&1; then
+    echo "fnm not installed via Homebrew. Exiting."
+    exit 1
+fi
+
 # Install latest LTS Node
 fnm install --lts
 fnm default lts
 fnm use lts
 
-# Ensure fnm is initialized in Fish
-FISH_CONFIG="$HOME/.config/fish/config.fish"
-if ! grep -q "fnm env" "$FISH_CONFIG" 2>/dev/null; then
-    echo 'fnm env --use-on-cd | source' >> "$FISH_CONFIG"
-    info "Added fnm env init to $FISH_CONFIG"
-fi
-
 ###############################################################################
-# Fish shell setup with main config.fish and subfolders
+# Fish shell setup
 ###############################################################################
-
 info "Setting up Fish shell..."
-FISH_REPO_DIR="$DIR"        # repo folder with config.fish, functions/, completions/
-
-mkdir -p "$FISH_REPO_DIR/functions"
-mkdir -p "$FISH_REPO_DIR/completions"
+FISH_DEST="$HOME/.config/fish"
+mkdir -p "$FISH_DEST/functions" "$FISH_DEST/completions"
 
 # Symlink main config.fish
-ln -sf "$FISH_REPO_DIR/config.fish" "$FISH_REPO_DIR/config.fish"
+ln -sf "$DIR/config.fish" "$FISH_DEST/config.fish"
 
 # Symlink functions
-if [ -d "$FISH_REPO_DIR/functions" ]; then
-    find "$FISH_REPO_DIR/functions" -type f -name "*.fish" | while read fn; do
-        ln -sf "$fn" "$FISH_REPO_DIR/functions/$(basename "$fn")"
+if [ -d "$DIR/functions" ]; then
+    find "$DIR/functions" -type f -name "*.fish" | while read fn; do
+        ln -sf "$fn" "$FISH_DEST/functions/$(basename "$fn")"
     done
 fi
 
 # Symlink completions
-if [ -d "$FISH_REPO_DIR/completions" ]; then
-    find "$FISH_REPO_DIR/completions" -type f -name "*.fish" | while read fn; do
-        ln -sf "$fn" "$FISH_REPO_DIR/completions/$(basename "$fn")"
+if [ -d "$DIR/completions" ]; then
+    find "$DIR/completions" -type f -name "*.fish" | while read fn; do
+        ln -sf "$fn" "$FISH_DEST/completions/$(basename "$fn")"
     done
 fi
 
 # Add Fish to /etc/shells and set as default
-if ! grep -Fxq "$(which fish)" /etc/shells; then
-    echo "$(which fish)" | sudo tee -a /etc/shells
+FISH_BIN="$(which fish)"
+if ! grep -Fxq "$FISH_BIN" /etc/shells; then
+    echo "$FISH_BIN" | sudo tee -a /etc/shells
 fi
-chsh -s "$(which fish)"
+chsh -s "$FISH_BIN"
 
 # iTerm2 integration
 curl -sL https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
 
 ###############################################################################
-# Kill affected apps to apply changes
+# Restart affected apps
 ###############################################################################
-
 for app in "Dock" "Finder" "SystemUIServer"; do
     killall "$app" &> /dev/null || true
 done
 
-success "Mac setup complete! Restart terminal or log out/in to apply all changes."
+success "Mac setup complete! Log out and log back in to apply all changes."
