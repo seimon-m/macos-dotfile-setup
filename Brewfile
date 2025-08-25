@@ -31,6 +31,7 @@ cask "signal"
 cask "visual-studio-code"
 cask "windsurf"
 cask "whatsapp"
+cask "ghostty"
 
 #############################
 # Brew formulas (CLI tools)

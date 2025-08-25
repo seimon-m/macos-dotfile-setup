@@ -17,6 +17,11 @@ info "Installing Homebrew..."
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 info "Adding Homebrew to PATH..."
+
+if [ ! -f ~/.zshrc ]; then
+    touch ~/.zshrc
+fi 
+
 UNAME_MACHINE="$(/usr/bin/uname -m)"
 if [[ "${UNAME_MACHINE}" == "arm64" ]]; then
     grep -qxF 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.zshrc || \
@@ -35,7 +40,7 @@ fi
 info "Installing Brew packages from Brewfile..."
 brew update
 brew upgrade
-brew bundle --file=./Brewfile --no-lock
+brew bundle --file=./Brewfile
 brew cleanup
 
 ###############################################################################
@@ -96,6 +101,16 @@ defaults write com.apple.dock showhidden -bool true
 defaults write com.apple.dock show-recents -bool false
 
 # Screenshots
+
+SCREENSHOT_DIR="$HOME/Screenshots"
+
+info "Creating screenshots folder at $SCREENSHOT_DIR..."
+mkdir -p "$SCREENSHOT_DIR"
+
+info "Setting macOS to save screenshots in $SCREENSHOT_DIR..."
+defaults write com.apple.screencapture location "$SCREENSHOT_DIR"
+
+
 defaults write com.apple.screencapture type -string "png"
 
 # Security
@@ -119,7 +134,7 @@ defaults write com.apple.commerce AutoUpdateRestartRequired -bool true
 ###############################################################################
 
 git config --global user.name "Simon"
-git config --global user.email "you@example.com"
+git config --global user.email "simimueller@hotmail.com"
 git config --global init.defaultBranch main
 git config --global color.ui auto
 git config --global diff.tool vimdiff
@@ -134,10 +149,17 @@ git config --global push.default simple
 ###############################################################################
 
 info "Setting up Node with fnm..."
-eval "$(fnm env)"
+# Install latest LTS Node
 fnm install --lts
-fnm use --lts
 fnm default lts
+fnm use lts
+
+# Ensure fnm is initialized in Fish
+FISH_CONFIG="$HOME/.config/fish/config.fish"
+if ! grep -q "fnm env" "$FISH_CONFIG" 2>/dev/null; then
+    echo 'fnm env --use-on-cd | source' >> "$FISH_CONFIG"
+    info "Added fnm env init to $FISH_CONFIG"
+fi
 
 ###############################################################################
 # Fish shell setup with main config.fish and subfolders
