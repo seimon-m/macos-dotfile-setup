@@ -151,7 +151,12 @@ fnm use lts
 # Fish shell setup
 ###############################################################################
 info "Setting up Fish shell..."
+
+# Ensure DIR is absolute
+DIR="$(cd "$(dirname "$0")" && pwd)"
 FISH_DEST="$HOME/.config/fish"
+
+# Create necessary directories
 mkdir -p "$FISH_DEST/functions" "$FISH_DEST/completions"
 
 # Symlink main config.fish
@@ -159,17 +164,21 @@ ln -sf "$DIR/config.fish" "$FISH_DEST/config.fish"
 
 # Symlink functions
 if [ -d "$DIR/functions" ]; then
-    find "$DIR/functions" -type f -name "*.fish" | while read fn; do
+    find "$DIR/functions" -type f -name "*.fish" | while read -r fn; do
         ln -sf "$fn" "$FISH_DEST/functions/$(basename "$fn")"
     done
 fi
 
 # Symlink completions
 if [ -d "$DIR/completions" ]; then
-    find "$DIR/completions" -type f -name "*.fish" | while read fn; do
+    find "$DIR/completions" -type f -name "*.fish" | while read -r fn; do
         ln -sf "$fn" "$FISH_DEST/completions/$(basename "$fn")"
     done
 fi
+
+# Remove broken symlinks just in case
+find "$FISH_DEST/functions" -type l ! -exec test -e {} \; -delete
+find "$FISH_DEST/completions" -type l ! -exec test -e {} \; -delete
 
 # Add Fish to /etc/shells and set as default
 FISH_BIN="$(which fish)"
@@ -180,6 +189,9 @@ chsh -s "$FISH_BIN"
 
 # iTerm2 integration
 curl -sL https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
+
+success "Fish shell setup complete! Open a new terminal to start using it."
+
 
 ###############################################################################
 # Restart affected apps
