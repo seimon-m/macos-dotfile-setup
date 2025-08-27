@@ -42,10 +42,10 @@ sudo -v
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 # General UI/UX
-sudo scutil --set ComputerName "simon-mbp"
-sudo scutil --set HostName "simon"
-sudo scutil --set LocalHostName "simon"
-sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "simon"
+sudo scutil --set ComputerName "name-device"
+sudo scutil --set HostName "name-device"
+sudo scutil --set LocalHostName "name-device"
+sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "name"
 sudo nvram SystemAudioVolume=" "
 defaults write NSGlobalDomain NSTableViewDefaultSizeMode -int 2
 defaults write NSGlobalDomain AppleShowScrollBars -string "Always"
@@ -122,8 +122,8 @@ defaults write com.apple.commerce AutoUpdateRestartRequired -bool true
 # Git global defaults
 ###############################################################################
 
-git config --global user.name "Simon"
-git config --global user.email "simimueller@hotmail.com"
+git config --global user.name "Name"
+git config --global user.email "mail@example.com"
 git config --global init.defaultBranch main
 git config --global color.ui auto
 git config --global diff.tool vimdiff
